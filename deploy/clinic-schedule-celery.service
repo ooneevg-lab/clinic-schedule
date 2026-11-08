@@ -1,0 +1,15 @@
+[Unit]
+Description=clinic_schedule celery — пуши расписания (свой Redis, очередь не трогаем)
+After=network.target
+
+[Service]
+User=clinic
+Group=clinic
+WorkingDirectory=/home/clinic/clinic_schedule
+EnvironmentFile=/home/clinic/clinic_schedule/.env
+ExecStart=/home/clinic/clinic_schedule/venv/bin/celery -A config worker --loglevel=info --concurrency=1 -Q celery
+Restart=on-failure
+UMask=0022
+
+[Install]
+WantedBy=multi-user.target

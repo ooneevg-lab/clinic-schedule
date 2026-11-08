@@ -1,0 +1,90 @@
+{% load static %}
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Клиника{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/clinic.css' %}?v=20260919-brand-center">
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  {% block content %}{% endblock %}
+  <script>
+  (function () {
+    // Мост с Android-оберткой: страница забирает адрес установки у телефона
+    // и сама отправляет его в Django. Кука сессии прикладывается браузером,
+    // поэтому владелец берется из request.user на сервере.
+    function getCookie(name) {
+      var parts = document.cookie ? document.cookie.split(";") : [];
+      for (var i = 0; i < parts.length; i++) {
+        var p = parts[i].trim();
+        if (p.indexOf(name + "=") === 0) return decodeURIComponent(p.slice(name.length + 1));
+      }
+      return "";
+    }
+    function bridgeRegistration() {
+      try {
+        if (window.AndroidBridge && typeof window.AndroidBridge.getPushRegistration === "function") {
+          var v = window.AndroidBridge.getPushRegistration();
+          return (v || "").toString().trim();
+        }
+      } catch (e) {}
+      return "";
+    }
+    function registerPush() {
+      var reg = bridgeRegistration();
+      if (!reg) return false;
+      try {
+        fetch("/api/push/register/", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: {"Content-Type": "application/json", "X-CSRFToken": getCookie("csrftoken")},
+          body: JSON.stringify({registration: reg, platform: "android"}),
+        }).catch(function () {});
+      } catch (e) {}
+      return true;
+    }
+    function unregisterPush(reg) {
+      var target = reg || bridgeRegistration();
+      if (!target) return;
+      try {
+        var payload = JSON.stringify({registration: target, platform: "android"});
+        // fetch с keepalive умеет послать CSRF-заголовок, sendBeacon — нет,
+        // поэтому используем fetch, чтобы Django принял запрос по сессии.
+        fetch("/api/push/unregister/", {
+          method: "POST",
+          credentials: "same-origin",
+          keepalive: true,
+          headers: {"Content-Type": "application/json", "X-CSRFToken": getCookie("csrftoken")},
+          body: payload,
+        }).catch(function () {});
+      } catch (e) {}
+    }
+    window.ClinicPush = {register: registerPush, unregister: unregisterPush, current: bridgeRegistration};
+    // При каждом открытии страницы пробуем привязать адрес заново:
+    // это и есть перепривязка общего телефона при новом входе.
+    // Адрес от Firebase приходит асинхронно и может быть еще пуст
+    // в момент загрузки страницы — повторяем через 3 и 10 секунд.
+    function registerWithRetries(attempt) {
+      if (registerPush() || attempt >= 2) return;
+      setTimeout(function () { registerWithRetries(attempt + 1); }, attempt === 0 ? 3000 : 7000);
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", function () { registerWithRetries(0); });
+    } else {
+      registerWithRetries(0);
+    }
+    // Перед выходом гасим привязку этого телефона, чтобы следующему
+    // врачу на том же телефоне не летели чужие пуши.
+    document.addEventListener("submit", function (e) {
+      var form = e.target;
+      if (form && form.action && form.action.indexOf("/logout/") !== -1) {
+        unregisterPush();
+      }
+    });
+  })();
+  </script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

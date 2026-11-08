@@ -1,0 +1,15 @@
+[Unit]
+Description=clinic_schedule — расписание врачей (тест, рядом с clinic-queue)
+After=network.target
+
+[Service]
+User=clinic
+Group=clinic
+WorkingDirectory=/home/clinic/clinic_schedule
+EnvironmentFile=/home/clinic/clinic_schedule/.env
+ExecStart=/home/clinic/clinic_schedule/venv/bin/gunicorn config.wsgi:application --bind 127.0.0.1:8001 --workers 2 --timeout 60
+Restart=on-failure
+UMask=0022
+
+[Install]
+WantedBy=multi-user.target

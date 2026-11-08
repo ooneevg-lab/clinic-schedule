@@ -1,0 +1,17 @@
+db.sqlite3
+__pycache__/
+*.pyc
+.env
+.venv/
+.testdeps/
+.tools/
+static_root/
+.firebase-service.json
+clinic_schedule_deploy.zip
+*.zip
+logs/
+google-services.json
+android/.gradle/
+android/.idea/
+android/local.properties
+android/**/build/

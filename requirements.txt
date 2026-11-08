@@ -1,0 +1,13 @@
+Django>=5.2,<6.0
+djangorestframework>=3.16,<4.0
+pandas>=2.2,<3.0
+xlrd>=2.0,<3.0
+openpyxl>=3.1,<4.0
+python-dotenv>=1.0,<2.0
+gunicorn>=22.0,<24.0
+whitenoise>=6.6,<7.0
+pytest>=8.0
+pytest-django>=4.9
+firebase-admin>=6.5,<8.0
+celery>=5.3,<6.0
+redis>=5.0,<7.0

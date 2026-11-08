@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Загрузка расписания{% endblock %}
+{% block body_class %}upload-page{% endblock %}
+{% block content %}
+<main class="app-shell upload-shell">
+  <header class="app-header"><a class="brand" href="/schedule/">{% include "includes/brand_mark.html" only %}<span>Расписание<span class="brand-caption">Публикация для врачей</span></span></a><a class="btn btn-quiet" href="/schedule/">← К приёмам</a></header>
+  <div class="page-heading"><h1>Загрузка расписания</h1><p>Выберите дату и филиалы, затем добавьте файл.</p></div>
+  {% if messages %}{% for m in messages %}<div class="toast {% if m.tags == 'success' %}ok{% else %}err{% endif %}" role="status">{{ m }}</div>{% endfor %}{% endif %}
+  <section class="panel form-card" aria-label="Новое расписание">
+    <form method="post" enctype="multipart/form-data" id="upload-form">
+      {% csrf_token %}
+      <div class="step"><span class="step-num" aria-hidden="true">1</span><div class="step-body"><label class="step-title" for="up-date">Дата расписания</label><input type="date" name="work_date" id="up-date" value="{{ default_date }}" required><div class="date-shortcuts"><button type="button" class="btn btn-quiet" data-shift="0">Сегодня</button><button type="button" class="btn btn-quiet" data-shift="1">Завтра</button></div></div></div>
+      <div class="step"><span class="step-num" aria-hidden="true">2</span><div class="step-body"><span class="step-title" id="branches-title">Филиалы</span><div class="branches" id="up-branches" role="group" aria-labelledby="branches-title">{% for b in branches %}<label class="branch-check"><input type="checkbox" name="branch_ids" value="{{ b.id }}" {% if b.id|stringformat:"s" in selected_branch_ids %}checked{% endif %}><span>{{ b.code }} — {{ b.name }}</span></label>{% empty %}<p class="hint">Нет активных филиалов. Добавьте филиал в администрировании.</p>{% endfor %}</div><div class="branch-row"><button type="button" class="btn btn-quiet" id="up-ball">Выбрать все</button><button type="button" class="btn btn-quiet" id="up-bnone">Сбросить</button></div><p class="hint">Один файл будет опубликован в каждом выбранном филиале.</p></div></div>
+      <div class="step"><span class="step-num" aria-hidden="true">3</span><div class="step-body"><label class="step-title" for="up-file">Файл расписания</label><div class="file-field"><input type="file" name="file" id="up-file" accept=".xls,.xlsx" aria-describedby="file-help" required><p class="hint" id="file-help">Excel · .xls или .xlsx</p></div><details class="format-help"><summary>Как подготовить файл {% include "includes/menu_icon.html" only %}</summary><p class="hint">Первая строка — врачи с четвёртой колонки; колонки A–B — время.</p></details></div></div>
+      <div class="submit-row"><p>После загрузки расписание сразу станет доступно врачам.</p><button type="submit" class="btn btn-primary">Опубликовать расписание</button></div>
+    </form>
+  </section>
+  <section class="history-block" aria-labelledby="history-heading">
+    <div class="history-heading"><h2 id="history-heading">История загрузок</h2><form class="hist-form" method="get" id="hist-form"><label class="fld" for="hist-month"><span class="fld-label">Месяц</span><select name="hist_month" id="hist-month">{% for m in hist_months %}<option value="{{ m.key }}" {% if m.key == hist_month %}selected{% endif %}>{{ m.title }} ({{ m.count }})</option>{% empty %}<option>Загрузок пока нет</option>{% endfor %}</select></label><noscript><button type="submit" class="btn">Показать</button></noscript></form></div>
+    <div class="table-wrap"><table class="history-table"><thead><tr><th scope="col">Дата</th><th scope="col">Филиал</th><th scope="col">Врачей</th><th scope="col">Пациентов</th><th scope="col">Статус</th></tr></thead><tbody>{% for v in versions %}<tr><td data-label="Дата"><a href="/schedule/?date={{ v.work_date|date:'Y-m-d' }}&branch_id={{ v.branch_id }}">{{ v.work_date|date:"d.m.Y" }}</a></td><td data-label="Филиал">{{ v.branch.code }}</td><td data-label="Врачей">{{ v.services_count }}</td><td data-label="Пациентов">{{ v.entries_count }}</td><td data-label="Статус">{% if v.is_active %}<span class="badge active">Активна</span>{% else %}<span class="badge arch">Архив</span>{% endif %}</td></tr>{% empty %}<tr><td colspan="5">В этом месяце загрузок нет.</td></tr>{% endfor %}</tbody></table></div>
+  </section>
+  <footer class="page-footer"><form method="post" action="/logout/">{% csrf_token %}<button type="submit" class="btn btn-quiet">Выйти из системы</button></form></footer>
+</main>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/upload.js' %}?v=20260919-redesign" defer></script>{% endblock %}

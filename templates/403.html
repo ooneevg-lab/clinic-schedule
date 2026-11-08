@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Нет доступа{% endblock %}
+{% block body_class %}error-page{% endblock %}
+{% block content %}
+<main class="panel error-card"><span class="empty-symbol" aria-hidden="true">—</span><span class="error-code">Ошибка 403</span><h1>Нет доступа к разделу</h1><p>{% if exception %}{{ exception }}{% else %}Обратитесь к администратору клиники, чтобы уточнить доступ к этому разделу.{% endif %}</p><a class="btn btn-primary" href="/schedule/">Вернуться к расписанию</a><form method="post" action="/logout/" class="error-logout">{% csrf_token %}<button type="submit" class="btn btn-quiet">Войти под другой учётной записью</button></form></main>
+{% endblock %}

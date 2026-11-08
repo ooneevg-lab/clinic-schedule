@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Вход — Расписание{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+{% block content %}
+<main class="auth-wrap">
+  <div class="auth-brand"><div class="brand">{% include "includes/brand_mark.html" only %}<span>Расписание<span class="brand-caption">Рабочий день врача</span></span></div></div>
+  <section class="panel auth-card">
+    <h1>С возвращением</h1><p class="sub">Войдите, чтобы посмотреть свои приёмы.</p>
+    {% if form.errors %}<div class="err" id="login-error" role="alert">Неверный логин или пароль. Проверьте данные и попробуйте снова.</div>{% endif %}
+    <form method="post">{% csrf_token %}
+      <label class="fld"><span class="fld-cap">Рабочий логин</span><input name="username" value="{{ form.username.value|default:'' }}" autocomplete="username" autocapitalize="none" spellcheck="false" required {% if form.errors %}aria-invalid="true" aria-describedby="login-error"{% endif %}></label>
+      <label class="fld"><span class="fld-cap">Пароль</span><input name="password" type="password" autocomplete="current-password" required {% if form.errors %}aria-invalid="true" aria-describedby="login-error"{% endif %}></label>
+      {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+      <button type="submit" class="btn btn-primary">Войти</button>
+    </form>
+  </section>
+  <p class="auth-note">Если не получается войти, обратитесь к администратору клиники.</p>
+</main>
+{% endblock %}

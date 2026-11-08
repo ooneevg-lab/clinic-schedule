@@ -1,0 +1,22 @@
+#!/bin/sh
+# Minimal bootstrap: uses the Gradle version pinned in
+# gradle/wrapper/gradle-wrapper.properties (8.7 for AGP 8.5.2).
+# No gradle-wrapper.jar needed.
+set -e
+APP_HOME=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+DIST_URL=$(grep '^distributionUrl=' "$APP_HOME/gradle/wrapper/gradle-wrapper.properties" | cut -d= -f2- | sed 's/\\:/:/g')
+DIST_DIR="${GRADLE_USER_HOME:-$HOME/.gradle}/wrapper/dists/gradle-pinned"
+GRADLE_HOME="$DIST_DIR/gradle"
+if [ ! -x "$GRADLE_HOME/bin/gradle" ]; then
+  echo "Downloading Gradle ($DIST_URL)..."
+  mkdir -p "$DIST_DIR"
+  TMP_ZIP="$DIST_DIR/gradle.zip"
+  (command -v curl >/dev/null && curl -fL -o "$TMP_ZIP" "$DIST_URL") \
+    || (command -v wget >/dev/null && wget -O "$TMP_ZIP" "$DIST_URL")
+  rm -rf "$GRADLE_HOME"
+  mkdir -p "$GRADLE_HOME"
+  unzip -q "$TMP_ZIP" -d "$DIST_DIR/tmp"
+  mv "$DIST_DIR"/tmp/gradle-*/* "$GRADLE_HOME"/
+  rm -rf "$DIST_DIR/tmp" "$TMP_ZIP"
+fi
+exec "$GRADLE_HOME/bin/gradle" "$@"
